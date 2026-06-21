@@ -1,9 +1,40 @@
+# Biblioteca para trabalhar com expressões regulares.
+# É utilizada para localizar, substituir ou validar padrões de texto.
+# Neste código, serve para remover espaços repetidos após a limpeza do texto.
 import re
+
+# Biblioteca para manipulação de caracteres Unicode.
+# Permite identificar a categoria de cada caractere, como letra, número ou símbolo.
+# Foi utilizada para verificar se um caractere pertence ao conjunto de letras.
 import unicodedata
+
+# Counter é uma estrutura especializada para contagem de ocorrências.
+# Funciona como um dicionário onde as chaves são os elementos
+# e os valores representam quantas vezes cada elemento aparece.
 from collections import Counter
+
+
+# Foi utilizada para verificar a existência do arquivo Ubirajara
+# e realizar sua leitura.
 from pathlib import Path
 
+# Biblioteca principal de Processamento de Linguagem Natural (PLN).
+# Disponibiliza corpora, tokenizadores, stopwords e outras ferramentas
+# úteis para análise linguística.
 import nltk
+
+# gutenberg:
+# Corpus do NLTK contendo obras literárias do Projeto Gutenberg.
+# Foi utilizado para obter os textos em inglês analisados no trabalho.
+#
+# machado:
+# Corpus do NLTK contendo obras de Machado de Assis.
+# Foi utilizado para acessar "Memórias Póstumas de Brás Cubas".
+#
+# stopwords:
+# Conjunto de palavras muito frequentes em uma língua
+# (artigos, preposições, pronomes etc.).
+# Foi utilizado para remover palavras pouco informativas das análises.
 from nltk.corpus import gutenberg, machado, stopwords
 
 # Nota importante: este código é para análise de texto, e depende do arquivo ubirajara.txt estar presente no mesmo diretório para comparar com Memórias Póstumas. Se o arquivo não estiver presente, ele irá avisar e pular a comparação.

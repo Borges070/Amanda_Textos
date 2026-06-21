@@ -1,0 +1,207 @@
+import re
+import unicodedata
+from collections import Counter
+from pathlib import Path
+
+import nltk
+from nltk.corpus import gutenberg, machado, stopwords
+
+
+def garantir_nltk_corpus(nome: str):
+    """Garante que o corpus NLTK esteja disponível. Se não existir, tenta fazer o download."""
+    try:
+        nltk.data.find(f'corpora/{nome}')
+    except LookupError:
+        nltk.download(nome, quiet=True)
+
+
+def limpar(texto: str) -> str:
+    """Remove caracteres não alfabéticos e devolve o texto em minúsculas."""
+    texto = texto.lower()
+    return ''.join(ch for ch in texto if unicodedata.category(ch).startswith('L'))
+
+
+def limpar_texto_para_palavras(texto: str) -> str:
+    """Substitui caracteres não-letra por espaços, mantendo separação entre palavras."""
+    texto = texto.lower()
+    texto = ''.join(ch if unicodedata.category(ch).startswith('L') else ' ' for ch in texto)
+    texto = re.sub(r'\s+', ' ', texto).strip()
+    return texto
+
+
+def ocorrencias(texto: str):
+    """Cria um dicionário de ocorrências de letras e devolve a lista ordenada por frequência."""
+    texto_limpo = limpar(texto)
+    contagem = Counter(texto_limpo)
+    lista_ordenada = sorted(contagem.items(), key=lambda item: (-item[1], item[0]))
+    return dict(contagem), lista_ordenada
+
+
+def contar_palavras(texto: str):
+    """Conta as palavras de um texto e retorna um Counter com as frequências."""
+    texto_limpo = limpar_texto_para_palavras(texto)
+    palavras = texto_limpo.split()
+    return Counter(palavras)
+
+
+def riqueza_lexical(contador_palavras: Counter) -> float:
+    """Calcula a riqueza lexical: tipos / total de tokens."""
+    total_palavras = sum(contador_palavras.values())
+    tipos = len(contador_palavras)
+    if total_palavras == 0:
+        return 0.0
+    return tipos / total_palavras
+
+
+def hapax_legomena(contador_palavras: Counter):
+    """Retorna a lista de palavras que ocorrem apenas uma vez no texto."""
+    return sorted([palavra for palavra, frequencia in contador_palavras.items() if frequencia == 1])
+
+
+def top_n(counter: Counter, n=20):
+    """Retorna as n palavras ou letras mais frequentes."""
+    return counter.most_common(n)
+
+
+def bottom_n(counter: Counter, n=20):
+    """Retorna as n palavras ou letras menos frequentes."""
+    return sorted(counter.items(), key=lambda item: (item[1], item[0]))[:n]
+
+
+def imprimir_top_20_palavras(contador: Counter, titulo: str):
+    """Imprime as 20 palavras mais frequentes de um contador."""
+    print(f'--- {titulo} ---')
+    for palavra, frequencia in top_n(contador, n=20):
+        print(f'{palavra}: {frequencia}')
+    print()
+
+
+def alfabeto_do_texto(texto: str):
+    """Retorna o conjunto de letras usadas em um texto."""
+    return set(limpar(texto))
+
+
+def letras_unicas(alfabeto1: set, alfabeto2: set):
+    """Retorna letras presentes em um alfabeto e não no outro."""
+    return sorted(alfabeto1 - alfabeto2)
+
+
+def carregar_texto_arquivo(caminho: Path) -> str:
+    """Lê o texto de um arquivo local e retorna o conteúdo."""
+    return caminho.read_text(encoding='utf-8', errors='ignore')
+
+
+def imprimir_contagem_letras(nome: str, texto: str, n=10):
+    """Calcula e imprime as letras mais frequentes de um texto."""
+    _, lista_ordenada = ocorrencias(texto)
+    print(f'--- {nome} ---')
+    for letra, frequencia in lista_ordenada[:n]:
+        print(f'{letra}: {frequencia}')
+    print()
+
+
+def main():
+    # Preparação: garante os corpora NLTK necessários.
+    garantir_nltk_corpus('gutenberg')
+    garantir_nltk_corpus('machado')
+    garantir_nltk_corpus('stopwords')
+
+    # Exercício 1: função que limpa o texto, conta letras e retorna lista ordenada.
+    # A implementação está nas funções limpar() e ocorrencias().
+
+    # Exercício 2: analisar dois livros inteiros em Gutenberg para comparar contagens.
+    textos_ingles = {
+        'Emma (Jane Austen)': gutenberg.raw('austen-emma.txt'),
+        'Moby Dick (Herman Melville)': gutenberg.raw('melville-moby_dick.txt'),
+    }
+
+    print('Exercício 2: contagem de letras em dois livros em inglês do Gutenberg')
+    for titulo, texto in textos_ingles.items():
+        imprimir_contagem_letras(titulo, texto, n=10)
+
+    # Exercício 3: comparar um texto em inglês com um texto em português.
+    texto_machado = machado.raw('romance/marm05.txt')
+    texto_ingles = gutenberg.raw('austen-emma.txt')
+
+    alfabeto_ingles = alfabeto_do_texto(texto_ingles)
+    alfabeto_portugues = alfabeto_do_texto(texto_machado)
+
+    print('Exercício 3: comparação entre inglês e português')
+    print(f'Tamanho do alfabeto em inglês: {len(alfabeto_ingles)} letras')
+    print(f'Tamanho do alfabeto em português: {len(alfabeto_portugues)} letras')
+    print('Letras em inglês e não em português:', letras_unicas(alfabeto_ingles, alfabeto_portugues))
+    print('Letras em português e não em inglês:', letras_unicas(alfabeto_portugues, alfabeto_ingles))
+    print()
+
+    print('Letras mais frequentes em inglês:')
+    imprimir_contagem_letras('Inglês - Emma', texto_ingles, n=10)
+    print('Letras mais frequentes em português:')
+    imprimir_contagem_letras('Português - Memórias Póstumas', texto_machado, n=10)
+
+    contador_ingles = Counter(limpar(texto_ingles))
+    contador_portugues = Counter(limpar(texto_machado))
+    print('Letras menos frequentes em inglês:')
+    for letra, frequencia in bottom_n(contador_ingles, n=10):
+        print(f'{letra}: {frequencia}')
+    print()
+    print('Letras menos frequentes em português:')
+    for letra, frequencia in bottom_n(contador_portugues, n=10):
+        print(f'{letra}: {frequencia}')
+    print()
+
+    # Observações para o exercício 3:
+    # (a) O alfabeto usado no inglês é composto pelas letras latinas básicas sem acentos.
+    # (b) O alfabeto em português inclui letras com acentos e cedilha quando consideradas nos textos.
+    # (c) As letras mais frequentes variam, mas em português geralmente aparecem A, O, E, S, R.
+    # (d) As letras menos frequentes são as menos comuns do alfabeto e podem ser hápax no corpus.
+
+    # Exercício Machado: contar caracteres, limpar, contar palavras e calcular riqueza lexical.
+    numero_caracteres = len(texto_machado)
+    contador_palavras_machado = contar_palavras(texto_machado)
+    riqueza = riqueza_lexical(contador_palavras_machado)
+
+    print('Exercício Machado - Memórias Póstumas de Brás Cubas')
+    print(f'Número de caracteres no texto: {numero_caracteres}')
+    print(f'Número de palavras no texto: {sum(contador_palavras_machado.values())}')
+    print(f'Número de tipos de palavras: {len(contador_palavras_machado)}')
+    print(f'Riqueza lexical (tipos / tokens): {riqueza:.4f}')
+    print()
+
+    # Exercício 4, 5 e 6: comparar Memórias Póstumas com Ubirajara se o corpus for fornecido.
+    caminho_ubirajara = Path('ubirajara.txt')
+    if caminho_ubirajara.exists():
+        texto_ubirajara = carregar_texto_arquivo(caminho_ubirajara)
+        contador_ubirajara = contar_palavras(texto_ubirajara)
+
+        imprimir_top_20_palavras(contador_palavras_machado, 'Top 20 Memórias Póstumas')
+        imprimir_top_20_palavras(contador_ubirajara, 'Top 20 Ubirajara')
+
+        stopwords_portugues = set(stopwords.words('portuguese'))
+        frequentes_sem_stopwords_machado = [palavra for palavra, _ in top_n(contador_palavras_machado, n=100) if palavra not in stopwords_portugues]
+        frequentes_sem_stopwords_ubirajara = [palavra for palavra, _ in top_n(contador_ubirajara, n=100) if palavra not in stopwords_portugues]
+
+        print('Exercício 5: 20 palavras mais frequentes sem stopwords')
+        print('Memórias Póstumas sem stopwords:', frequentes_sem_stopwords_machado[:20])
+        print('Ubirajara sem stopwords:', frequentes_sem_stopwords_ubirajara[:20])
+        print()
+
+        hapaxes_machado = hapax_legomena(contador_palavras_machado)
+        hapaxes_ubirajara = hapax_legomena(contador_ubirajara)
+
+        print('Exercício 6: hápax legômena')
+        print(f'Quantidade de hápax em Memórias Póstumas: {len(hapaxes_machado)}')
+        print(f'Quantidade de hápax em Ubirajara: {len(hapaxes_ubirajara)}')
+        hapaxes_comuns = sorted(set(hapaxes_machado) & set(hapaxes_ubirajara))
+        print(f'Hápax comuns entre os dois textos ({len(hapaxes_comuns)}):', hapaxes_comuns[:50])
+        print()
+    else:
+        print('Arquivo Ubirajara não encontrado em ubirajara.txt.')
+        print('Copie o corpus de Ubirajara para este diretório se quiser comparar os textos no Exercício 4, 5 e 6.')
+        print()
+
+    # Observações finais: o script mostra todas as etapas do trabalho.
+    print('Fim da análise. Se quiser rodar novamente, execute o script após adicionar ubirajara.txt, se necessário.')
+
+
+if __name__ == '__main__':
+    main()

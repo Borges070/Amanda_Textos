@@ -6,7 +6,7 @@ from pathlib import Path
 import nltk
 from nltk.corpus import gutenberg, machado, stopwords
 
-# Nota importante: este script é para análise de texto, e depende do arquivo ubirajara.txt estar presente no mesmo diretório para comparar com Memórias Póstumas. Se o arquivo não estiver presente, ele irá avisar e pular a comparação.
+# Nota importante: este código é para análise de texto, e depende do arquivo ubirajara.txt estar presente no mesmo diretório para comparar com Memórias Póstumas. Se o arquivo não estiver presente, ele irá avisar e pular a comparação.
 # Para esse código a IA foi utilizada para tirar dúvidas e utilizar bibliotecas do Python úteis para a análise.
 # Além disso, a IA sugeriu criar funções para chamá-las no main. Essa forma me ajudou a consertar os erros que eu não achava no código anterior.
 # Por fim, a parte de prints para a visualização dos resultados foi feita totalmente com a IA, o que deixou a saída dos resultados mais organizada e fácil de entender.
